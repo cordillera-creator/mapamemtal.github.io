@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Mental - Psicología Social</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        
+        .mindmap-container {
+            width: 100%;
+            height: calc(100vh - 60px);
+            overflow: auto;
+            position: relative;
+            background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+        }
+        
+        .mindmap-area {
+            position: relative;
+            width: 1600px;
+            min-height: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        #svg-lines {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .central-node {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px; height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5), 
+                        0 5px 15px rgba(0, 0, 0, 0.1),
+                        inset 0 0 20px rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-align: center;
+            z-index: 10;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .central-node:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.6), 
+                        0 8px 20px rgba(0, 0, 0, 0.15),
+                        inset 0 0 25px rgba(255, 255, 255, 0.3);
+        }
+        
+        .central-node .icon {
+            font-size: 3.5em;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+        
+        .node {
+            position: absolute;
+            width: 220px;
+            min-height: 160px;
+            background: linear-gradient(145deg, #ffffff, #f0f4f8);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
+                        0 5px 10px rgba(0, 0, 0, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px 16px 12px 16px;
+            z-index: 10;
+            cursor: move;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            font-size: 0.95em;
+            word-wrap: break-word;
+            overflow: hidden;
+            user-select: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .node:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15),
+                        0 8px 15px rgba(0, 0, 0, 0.08),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        
+        .node.dragging {
+            opacity: 0.9;
+            transform: scale(1.08) rotate(2deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2),
+                        0 10px 20px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            z-index: 100;
+            transition: none;
+        }
+        
+        .node .icon {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1));
+        }
+        
+        .definicion { 
+            border-left: 5px solid #2563eb;
+            border-top: 1px solid rgba(37, 99, 235, 0.3);
+        }
+        .objetivos { 
+            border-left: 5px solid #16a34a;
+            border-top: 1px solid rgba(22, 163, 74, 0.3);
+        }
+        .orientaciones { 
+            border-left: 5px solid #a21caf;
+            border-top: 1px solid rgba(162, 28, 175, 0.3);
+        }
+        .relacion { 
+            border-left: 5px solid #ea580c;
+            border-top: 1px solid rgba(234, 88, 12, 0.3);
+        }
+        .rol { 
+            border-left: 5px solid #dc2626;
+            border-top: 1px solid rgba(220, 38, 38, 0.3);
+        }
+        .metodos { 
+            border-left: 5px solid #0891b2;
+            border-top: 1px solid rgba(8, 145, 178, 0.3);
+        }
+        .preguntas { 
+            border-left: 5px solid #64748b;
+            border-top: 1px solid rgba(100, 116, 139, 0.3);
+        }
+        
+        .expandible {
+            display: none;
+            margin-top: 12px;
+            background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+            color: #334155;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.9em;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .expandible.active { display: block; }
+        
+        .expand-btn {
+            margin-top: 10px;
+            background: linear-gradient(145deg, #e0e7ff, #c7d2fe);
+            color: #6366f1;
+            border: none;
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2),
+                        0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .expand-btn:hover { 
+            background: linear-gradient(145deg, #6366f1, #4f46e5);
+            color: #fff;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3),
+                        0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Slider de navegación */
+        .nav-slider {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
+                        0 5px 10px rgba(0, 0, 0, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .nav-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 1.3em;
+            margin: 0 8px;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3),
+                        0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-btn:hover {
+            background: linear-gradient(145deg, #5a67d8, #6b46c1);
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4),
+                        0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .zoom-info {
+            margin: 0 20px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1em;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        /* Marca de agua */
+        .watermark {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .watermark-text {
+            font-size: 4rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.08);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transform: rotate(-30deg);
+            white-space: nowrap;
+            user-select: none;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: rotate(-30deg) translateY(0); }
+            50% { transform: rotate(-30deg) translateY(-20px); }
+        }
+        
+        /* Botón de reset */
+        .reset-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3),
+                        0 3px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 0.5px;
+        }
+        
+        .reset-btn:hover {
+            background: linear-gradient(145deg, #5a67d8, #6b46c1);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4),
+                        0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        @media (max-width: 700px) {
+            .mindmap-area { 
+                width: 100%; 
+                min-height: 100vh;
+                padding: 10px;
+            }
+            .central-node { 
+                width: 120px; 
+                height: 120px; 
+                font-size: 1em; 
+            }
+            .central-node .icon {
+                font-size: 2.5em;
+                margin-bottom: 8px;
+            }
+            .node { 
+                width: 140px; 
+                min-height: 120px; 
+                font-size: 0.85em;
+                padding: 12px 10px 8px 10px;
+            }
+            .node .icon {
+                font-size: 1.8em;
+                margin-bottom: 5px;
+            }
+            .expand-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 1.1em;
+            }
+            .nav-slider {
+                bottom: 80px;
+                padding: 8px 15px;
+            }
+            .nav-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1em;
+                margin: 0 5px;
+            }
+            .zoom-info {
+                font-size: 0.95em;
+                margin: 0 10px;
+                min-width: 50px;
+            }
+            .reset-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+            .watermark-text {
+                font-size: 2.5rem;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Marca de agua -->
+<div class="watermark">
+    <div class="watermark-text">Hecho por Suyer Hernandez</div>
+</div>
+
+<div class="mindmap-container">
+    <div class="mindmap-area">
+        <svg id="svg-lines"></svg>
+        <div class="central-node" id="centralNode">
+            <span class="icon">🧠</span>
+            Psicología<br>Social
+        </div>
+        <div class="node definicion" id="definicion">
+            <span class="icon">👤</span>
+            <b>Definición</b>
+            <div style="margin-top:8px;">Estudia cómo los pensamientos y conductas son influidos por otros.</div>
+            <button class="expand-btn" onclick="toggleExpand('def-expand', this)">+</button>
+            <div class="expandible" id="def-expand">
+                <b>Unidad de análisis:</b> el individuo en contextos sociales.<br>
+                <b>Tipos de influencia:</b> cara a cara, indirecta, unidireccional.<br>
+                <b>Ideas clave:</b> pensamiento social, influencia social, relaciones sociales.
+            </div>
+        </div>
+        <div class="node definicion" id="objeto">
+            <span class="icon">🔍</span>
+            <b>Objeto y Especificidad</b>
+            <div style="margin-top:8px;">Interrelación individuo–sociedad. Procesos internos y fuerzas sociales.</div>
+            <button class="expand-btn" onclick="toggleExpand('obj-expand', this)">+</button>
+            <div class="expandible" id="obj-expand">
+                El objeto NO es lo mismo que los objetivos.<br>
+                <b>Enfoque:</b> percepción social, actitudes, conformidad, agresión, ayuda, prejuicio, atracción.
+            </div>
+        </div>
+        <div class="node objetivos" id="objetivos">
+            <span class="icon">🎯</span>
+            <b>Objetivos</b>
+            <div style="margin-top:8px;">
+                • Comprender influencia social<br>
+                • Explicar fenómenos sociales<br>
+                • Mejorar convivencia
+            </div>
+            <button class="expand-btn" onclick="toggleExpand('objs-expand', this)">+</button>
+            <div class="expandible" id="objs-expand">
+                <b>Científico:</b> identificar principios de influencia social.<br>
+                <b>Aplicado:</b> programas, campañas, intervenciones comunitarias y organizacionales.
+            </div>
+        </div>
+        <div class="node orientaciones" id="orientaciones">
+            <span class="icon">📚</span>
+            <b>Orientaciones Teóricas</b>
+            <div style="margin-top:8px;">
+                Conductismo, Gestalt, Cognitivismo, Rol, Interaccionismo, Construccionismo
+            </div>
+            <button class="expand-btn" onclick="toggleExpand('orient-expand', this)">+</button>
+            <div class="expandible" id="orient-expand">
+                <b>Conductismo:</b> refuerzo, modelado social.<br>
+                <b>Gestalt:</b> figura-fondo en percepción social.<br>
+                <b>Cognitivas:</b> heurísticos, procesamiento dual.<br>
+                <b>Construccionismo:</b> discursos y prácticas culturales.
+            </div>
+        </div>
+        <div class="node relacion" id="relacion">
+            <span class="icon">🔗</span>
+            <b>Relación con Otras Ciencias</b>
+            <div style="margin-top:8px;">
+                Sociología, Antropología, Biología; niveles explicativos complementarios.
+            </div>
+            <button class="expand-btn" onclick="toggleExpand('rel-expand', this)">+</button>
+            <div class="expandible" id="rel-expand">
+                <b>Diferencia con sociología:</b> estructuras vs. procesos individuales.<br>
+                <b>Complementariedad:</b> biológico, psicológico, social.
+            </div>
+        </div>
+        <div class="node rol" id="rol">
+            <span class="icon">💼</span>
+            <b>Rol del Psicólogo Social</b>
+            <div style="margin-top:8px;">
+                Diagnóstico, intervenciones, asesoría en conflictos y políticas.
+            </div>
+            <button class="expand-btn" onclick="toggleExpand('rol-expand', this)">+</button>
+            <div class="expandible" id="rol-expand">
+                <b>Funciones:</b> investigación, evaluación, campañas, asesoría, trabajo comunitario.<br>
+                <b>Contextos:</b> universidades, ONG, salud pública, empresas, gobiernos.
+            </div>
+        </div>
+        <div class="node metodos" id="metodos">
+            <span class="icon">🔬</span>
+            <b>Métodos</b>
+            <div style="margin-top:8px;">
+                Métodos cualitativos y experimentales para estudiar influencia.
+            </div>
+            <button class="expand-btn" onclick="toggleExpand('met-expand', this)">+</button>
+            <div class="expandible" id="met-expand">
+                <b>Ejemplos:</b> análisis del discurso, narrativas, etnografía, investigación de acción.<br>
+                <b>Nota:</b> la investigación cualitativa privilegia cercanía y flexibilidad.
+            </div>
+        </div>
+        <div class="node preguntas" id="preguntas">
+            <span class="icon">❓</span>
+            <b>Preguntas Generadoras</b>
+            <div style="margin-top:8px;">Cuestiones clave de la psicología social</div>
+            <button class="expand-btn" onclick="toggleExpand('preguntas-expand', this)">+</button>
+            <div class="expandible" id="preguntas-expand">
+                <b>a.</b> ¿Qué es la psicología social? ¿Cuál es su objeto de estudio? ¿Qué la caracteriza?<br><br>
+                <b>b.</b> ¿Cuáles son los objetivos de estudio esenciales de la psicología social?<br><br>
+                <b>c.</b> ¿Cuáles son las orientaciones y perspectivas teóricas principales de la psicología social (escuelas y teorías)?<br><br>
+                <b>d.</b> ¿Qué relaciones tiene la psicología social con otras ciencias humanas o sociales?<br><br>
+                <b>e.</b> ¿Qué hace un psicólogo social? ¿Cuál es su rol?
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de reset -->
+<button class="reset-btn" onclick="resetPositions()">Restablecer Posiciones</button>
+
+<!-- Slider de navegación -->
+<div class="nav-slider">
+    <button class="nav-btn" id="zoomOut" title="Alejar">−</button>
+    <div class="zoom-info">100%</div>
+    <button class="nav-btn" id="zoomIn" title="Acercar">+</button>
+    <button class="nav-btn" id="resetView" title="Restablecer vista">⟲</button>
+</div>
+
+<script>
+    // Nodos y ángulos para distribución circular con radio aumentado
+    const nodes = [
+        {id: 'definicion', angle: -90, radius: 380, color: '#2563eb'},
+        {id: 'objeto', angle: -45, radius: 300, color: '#2563eb'},
+        {id: 'objetivos', angle: 0, radius: 380, color: '#16a34a'},
+        {id: 'orientaciones', angle: 45, radius: 300, color: '#a21caf'},
+        {id: 'relacion', angle: 90, radius: 380, color: '#ea580c'},
+        {id: 'rol', angle: 135, radius: 300, color: '#dc2626'},
+        {id: 'metodos', angle: 180, radius: 380, color: '#0891b2'},
+        {id: 'preguntas', angle: 225, radius: 300, color: '#64748b'}
+    ];
+    
+    let currentZoom = 1;
+    const minZoom = 0.5;
+    const maxZoom = 1.5;
+    
+    // Variables para el arrastre de nodos
+    let isDragging = false;
+    let currentDraggingNode = null;
+    let offsetX, offsetY;
+    
+    function positionNodes() {
+        const centerX = 800; // Centro del área del mapa (ajustado al nuevo ancho)
+        const centerY = 450; // Centro del área del mapa (ajustado al nuevo alto)
+        
+        nodes.forEach(n => {
+            const el = document.getElementById(n.id);
+            const rad = n.angle * Math.PI / 180;
+            const x = centerX + n.radius * Math.cos(rad) - el.offsetWidth/2;
+            const y = centerY + n.radius * Math.sin(rad) - el.offsetHeight/2;
+            el.style.left = x+'px';
+            el.style.top = y+'px';
+        });
+    }
+    
+    function drawLines() {
+        const svg = document.getElementById('svg-lines');
+        svg.innerHTML = '';
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        
+        // Obtener posición del nodo central
+        const centralNode = document.getElementById('centralNode');
+        const centralRect = centralNode.getBoundingClientRect();
+        const containerRect = document.querySelector('.mindmap-area').getBoundingClientRect();
+        
+        // Calcular centro del nodo central ajustado por el zoom
+        const centerX = (centralRect.left + centralRect.width/2 - containerRect.left) / currentZoom;
+        const centerY = (centralRect.top + centralRect.height/2 - containerRect.top) / currentZoom;
+        
+        nodes.forEach(n => {
+            const el = document.getElementById(n.id);
+            const rect = el.getBoundingClientRect();
+            
+            // Calcular centro del nodo actual ajustado por el zoom
+            const nodeX = (rect.left + rect.width/2 - containerRect.left) / currentZoom;
+            const nodeY = (rect.top + rect.height/2 - containerRect.top) / currentZoom;
+            
+            // Crear línea con degradado específico para cada nodo
+            const gradientId = `gradient-${n.id}`;
+            svg.innerHTML += `
+                <defs>
+                    <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#667eea" stop-opacity="0.8" />
+                        <stop offset="100%" stop-color="${n.color}" stop-opacity="0.6" />
+                    </linearGradient>
+                </defs>
+                <line x1="${centerX}" y1="${centerY}" x2="${nodeX}" y2="${nodeY}" 
+                      stroke="url(#${gradientId})" 
+                      stroke-width="5" 
+                      stroke-linecap="round" 
+                      opacity="0.9"
+                      stroke-dasharray="8,4">
+                    <animate attributeName="stroke-dashoffset" from="12" to="0" dur="1.5s" repeatCount="indefinite" />
+                </line>
+                
+                <!-- Añadir un punto brillante en el centro de la línea -->
+                <circle cx="${(centerX + nodeX) / 2}" cy="${(centerY + nodeY) / 2}" r="4" fill="${n.color}" opacity="0.8">
+                    <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2s" repeatCount="indefinite" />
+                </circle>
+            `;
+        });
+    }
+    
+    function updateZoom() {
+        const mindmapArea = document.querySelector('.mindmap-area');
+        mindmapArea.style.transform = `scale(${currentZoom})`;
+        mindmapArea.style.transformOrigin = 'center center';
+        
+        // Actualizar el indicador de zoom
+        document.querySelector('.zoom-info').textContent = Math.round(currentZoom * 100) + '%';
+        
+        // Redibujar líneas después del zoom
+        setTimeout(() => {
+            drawLines();
+        }, 100);
+    }
+    
+    function toggleExpand(id, btn) {
+        const el = document.getElementById(id);
+        el.classList.toggle('active');
+        btn.textContent = el.classList.contains('active') ? '−' : '+';
+    }
+    
+    document.getElementById('centralNode').onclick = function() {
+        if(document.getElementById('centralInfo')) return;
+        const info = document.createElement('div');
+        info.id = 'centralInfo';
+        info.style.position = 'fixed';
+        info.style.left = '50%';
+        info.style.top = '50%';
+        info.style.transform = 'translate(-50%,-50%)';
+        info.style.background = 'linear-gradient(145deg, #ffffff, #f0f4f8)';
+        info.style.color = '#334155';
+        info.style.padding = '40px';
+        info.style.borderRadius = '20px';
+        info.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.08)';
+        info.style.zIndex = 1000;
+        info.style.maxWidth = '80%';
+        info.style.border = '1px solid rgba(255, 255, 255, 0.8)';
+        info.style.backdropFilter = 'blur(10px)';
+        info.innerHTML = `
+            <h2 style="margin-top:0;color:#667eea;margin-bottom:20px;">Psicología Social</h2>
+            <p style="line-height:1.6;">La Psicología Social estudia cómo nuestros pensamientos, sentimientos y comportamientos son moldeados por el contexto social. Desde los experimentos clásicos de Milgram hasta las modernas teorías sobre redes sociales, esta disciplina nos ayuda a entender la compleja danza entre el individuo y la sociedad.</p>
+            <button onclick="this.parentElement.remove()" style="margin-top:25px;padding:12px 24px;background:linear-gradient(145deg, #667eea, #764ba2);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:500;box-shadow:0 4px 8px rgba(102, 126, 234, 0.3);">Cerrar</button>
+        `;
+        document.body.appendChild(info);
+    }
+    
+    // Funcionalidad del slider de zoom
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        if (currentZoom < maxZoom) {
+            currentZoom += 0.1;
+            updateZoom();
+        }
+    });
+    
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        if (currentZoom > minZoom) {
+            currentZoom -= 0.1;
+            updateZoom();
+        }
+    });
+    
+    document.getElementById('resetView').addEventListener('click', () => {
+        currentZoom = 1;
+        updateZoom();
+        // Centrar la vista
+        document.querySelector('.mindmap-container').scrollLeft = 0;
+        document.querySelector('.mindmap-container').scrollTop = 0;
+    });
+    
+    // Funcionalidad de arrastre de nodos
+    document.querySelectorAll('.node').forEach(node => {
+        node.addEventListener('mousedown', startDragging);
+    });
+    
+    function startDragging(e) {
+        // Evitar que se inicie el arrastre si se hace clic en el botón de expandir
+        if (e.target.classList.contains('expand-btn')) {
+            return;
+        }
+        
+        isDragging = true;
+        currentDraggingNode = e.currentTarget;
+        
+        // Añadir clase visual durante el arrastre
+        currentDraggingNode.classList.add('dragging');
+        
+        // Calcular el offset desde la esquina superior izquierda del nodo
+        const rect = currentDraggingNode.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        
+        // Añadir eventos de movimiento y liberación
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDragging);
+        
+        // Evitar la selección de texto durante el arrastre
+        e.preventDefault();
+    }
+    
+    function drag(e) {
+        if (!isDragging || !currentDraggingNode) return;
+        
+        // Obtener la posición del contenedor
+        const containerRect = document.querySelector('.mindmap-area').getBoundingClientRect();
+        
+        // Calcular la nueva posición del nodo ajustada por el zoom
+        let newX = (e.clientX - containerRect.left - offsetX) / currentZoom;
+        let newY = (e.clientY - containerRect.top - offsetY) / currentZoom;
+        
+        // Aplicar la nueva posición
+        currentDraggingNode.style.left = newX + 'px';
+        currentDraggingNode.style.top = newY + 'px';
+        
+        // Redibujar las líneas para que sigan al nodo
+        drawLines();
+    }
+    
+    function stopDragging() {
+        if (currentDraggingNode) {
+            currentDraggingNode.classList.remove('dragging');
+        }
+        
+        isDragging = false;
+        currentDraggingNode = null;
+        
+        // Eliminar eventos de movimiento y liberación
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', stopDragging);
+    }
+    
+    // Función para restablecer las posiciones originales
+    function resetPositions() {
+        positionNodes();
+        drawLines();
+    }
+    
+    // Inicialización
+    window.addEventListener('DOMContentLoaded', () => { 
+        positionNodes(); 
+        drawLines(); 
+    });
+    
+    // Ajustar cuando cambie el tamaño de la ventana
+    window.addEventListener('resize', () => { 
+        positionNodes(); 
+        drawLines(); 
+    });
+</script>
+</body>
+</html>
