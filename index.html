@@ -3,737 +3,1539 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Mental - Psicología Social</title>
+    <title>POS Restaurante - Administración y Meseros</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Poppins', sans-serif;
-            overflow-x: auto;
-            overflow-y: hidden;
+        :root {
+            --primario: #5a3fd6;
+            --primario-oscuro: #4028a3;
+            --acento: #fbbf24;
+            --gris-claro: #f5f7fb;
+            --texto: #1f2933;
+            --verde: #16a34a;
+            --rojo: #dc2626;
         }
-        
-        .mindmap-container {
-            width: 100%;
-            height: calc(100vh - 60px);
-            overflow: auto;
-            position: relative;
-            background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
-        }
-        
-        .mindmap-area {
-            position: relative;
-            width: 1600px;
-            min-height: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        #svg-lines {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
-        .central-node {
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px; height: 200px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5), 
-                        0 5px 15px rgba(0, 0, 0, 0.1),
-                        inset 0 0 20px rgba(255, 255, 255, 0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 1.2em;
-            font-weight: 600;
-            text-align: center;
-            z-index: 10;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 3px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .central-node:hover {
-            transform: translate(-50%, -50%) scale(1.05);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.6), 
-                        0 8px 20px rgba(0, 0, 0, 0.15),
-                        inset 0 0 25px rgba(255, 255, 255, 0.3);
-        }
-        
-        .central-node .icon {
-            font-size: 3.5em;
-            margin-bottom: 12px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-        }
-        
-        .node {
-            position: absolute;
-            width: 220px;
-            min-height: 160px;
-            background: linear-gradient(145deg, #ffffff, #f0f4f8);
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
-                        0 5px 10px rgba(0, 0, 0, 0.05),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 20px 16px 12px 16px;
-            z-index: 10;
-            cursor: move;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-align: center;
-            font-size: 0.95em;
-            word-wrap: break-word;
-            overflow: hidden;
-            user-select: none;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-        }
-        
-        .node:hover {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15),
-                        0 8px 15px rgba(0, 0, 0, 0.08),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        }
-        
-        .node.dragging {
-            opacity: 0.9;
-            transform: scale(1.08) rotate(2deg);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2),
-                        0 10px 20px rgba(0, 0, 0, 0.1),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-            z-index: 100;
-            transition: none;
-        }
-        
-        .node .icon {
-            font-size: 2.5em;
-            margin-bottom: 8px;
-            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1));
-        }
-        
-        .definicion { 
-            border-left: 5px solid #2563eb;
-            border-top: 1px solid rgba(37, 99, 235, 0.3);
-        }
-        .objetivos { 
-            border-left: 5px solid #16a34a;
-            border-top: 1px solid rgba(22, 163, 74, 0.3);
-        }
-        .orientaciones { 
-            border-left: 5px solid #a21caf;
-            border-top: 1px solid rgba(162, 28, 175, 0.3);
-        }
-        .relacion { 
-            border-left: 5px solid #ea580c;
-            border-top: 1px solid rgba(234, 88, 12, 0.3);
-        }
-        .rol { 
-            border-left: 5px solid #dc2626;
-            border-top: 1px solid rgba(220, 38, 38, 0.3);
-        }
-        .metodos { 
-            border-left: 5px solid #0891b2;
-            border-top: 1px solid rgba(8, 145, 178, 0.3);
-        }
-        .preguntas { 
-            border-left: 5px solid #64748b;
-            border-top: 1px solid rgba(100, 116, 139, 0.3);
-        }
-        
-        .expandible {
-            display: none;
-            margin-top: 12px;
-            background: linear-gradient(145deg, #f8fafc, #e2e8f0);
-            color: #334155;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 0.9em;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-            text-align: left;
-            width: 100%;
+
+        * {
             box-sizing: border-box;
-            border: 1px solid rgba(203, 213, 225, 0.5);
-            animation: fadeIn 0.3s ease-in-out;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%);
+            color: var(--texto);
+            min-height: 100vh;
         }
-        
-        .expandible.active { display: block; }
-        
-        .expand-btn {
-            margin-top: 10px;
-            background: linear-gradient(145deg, #e0e7ff, #c7d2fe);
-            color: #6366f1;
-            border: none;
-            border-radius: 50%;
-            width: 32px; height: 32px;
-            font-size: 1.3em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2),
-                        0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .expand-btn:hover { 
-            background: linear-gradient(145deg, #6366f1, #4f46e5);
-            color: #fff;
-            transform: scale(1.1);
-            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3),
-                        0 3px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Slider de navegación */
-        .nav-slider {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
-                        0 5px 10px rgba(0, 0, 0, 0.05),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            z-index: 100;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-        }
-        
-        .nav-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: none;
-            background: linear-gradient(145deg, #667eea, #764ba2);
-            color: #fff;
-            font-size: 1.3em;
-            margin: 0 8px;
-            cursor: pointer;
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3),
-                        0 3px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .nav-btn:hover {
-            background: linear-gradient(145deg, #5a67d8, #6b46c1);
-            transform: scale(1.1) translateY(-2px);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4),
-                        0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .nav-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .zoom-info {
-            margin: 0 20px;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 1.1em;
-            min-width: 60px;
-            text-align: center;
-        }
-        
-        /* Marca de agua */
-        .watermark {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        
-        .watermark-text {
-            font-size: 4rem;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.08);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            transform: rotate(-30deg);
-            white-space: nowrap;
-            user-select: none;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            animation: float 20s infinite ease-in-out;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: rotate(-30deg) translateY(0); }
-            50% { transform: rotate(-30deg) translateY(-20px); }
-        }
-        
-        /* Botón de reset */
-        .reset-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(145deg, #667eea, #764ba2);
+
+        header {
+            background: linear-gradient(135deg, var(--primario) 0%, var(--primario-oscuro) 100%);
             color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 18px;
-            font-size: 0.95em;
-            font-weight: 500;
-            cursor: pointer;
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3),
-                        0 3px 6px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 24px rgba(90, 63, 214, 0.25);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
             letter-spacing: 0.5px;
         }
-        
-        .reset-btn:hover {
-            background: linear-gradient(145deg, #5a67d8, #6b46c1);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4),
-                        0 5px 10px rgba(0, 0, 0, 0.15);
+
+        header .session-info {
+            font-size: 0.95rem;
+            opacity: 0.9;
         }
-        
-        @media (max-width: 700px) {
-            .mindmap-area { 
-                width: 100%; 
-                min-height: 100vh;
-                padding: 10px;
+
+        main {
+            padding: 32px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
+            padding: 32px;
+        }
+
+        .login-wrapper {
+            max-width: 420px;
+            margin: 60px auto;
+            text-align: center;
+        }
+
+        .login-wrapper h2 {
+            margin-bottom: 8px;
+            font-size: 1.6rem;
+        }
+
+        .login-wrapper p {
+            margin-top: 0;
+            color: #6b7280;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            font-size: 0.95rem;
+            transition: border 0.2s ease;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primario);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(90, 63, 214, 0.2);
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            background: linear-gradient(135deg, var(--primario) 0%, var(--primario-oscuro) 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        button.secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(90, 63, 214, 0.2);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            justify-content: flex-start;
+            text-align: left;
+            background: #f4f4ff;
+            color: var(--primario-oscuro);
+            padding: 12px 18px;
+            box-shadow: none;
+        }
+
+        .sidebar button.active {
+            background: linear-gradient(135deg, var(--primario) 0%, var(--primario-oscuro) 100%);
+            color: white;
+            box-shadow: 0 12px 20px rgba(90, 63, 214, 0.2);
+        }
+
+        .modules {
+            background: white;
+            border-radius: 18px;
+            padding: 24px 28px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .modules h2 {
+            margin-top: 0;
+        }
+
+        .modules .section-title {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--primario-oscuro);
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .grid.two-columns {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        table thead {
+            background: #eef2ff;
+        }
+
+        table th, table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(90, 63, 214, 0.12);
+            color: var(--primario-oscuro);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .flex-between h3 {
+            margin: 0;
+        }
+
+        .pill {
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: var(--primario-oscuro);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .waiter-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 24px;
+        }
+
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, border 0.2s ease;
+        }
+
+        .table-card.busy {
+            border-color: var(--acento);
+        }
+
+        .table-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .table-card h3 {
+            margin: 0 0 12px 0;
+        }
+
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .seat {
+            padding: 8px;
+            border-radius: 10px;
+            background: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.8rem;
+            gap: 4px;
+        }
+
+        .seat.busy {
+            background: rgba(251, 191, 36, 0.18);
+            border: 1px solid rgba(251, 191, 36, 0.6);
+        }
+
+        .order-panel {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .order-panel h2 {
+            margin: 0;
+        }
+
+        .menu-options {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px;
+            background: #fafafa;
+        }
+
+        .menu-options h4 {
+            margin: 8px 0;
+            color: var(--primario-oscuro);
+        }
+
+        .menu-item-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 0.9rem;
+        }
+
+        .menu-item-option label {
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .order-list {
+            display: grid;
+            gap: 16px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .order-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 16px;
+            background: #f9fafb;
+        }
+
+        .order-card .status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(90, 63, 214, 0.12);
+            color: var(--primario-oscuro);
+        }
+
+        .order-card .status.servido {
+            background: rgba(22, 163, 74, 0.12);
+            color: var(--verde);
+        }
+
+        .order-card .status.cerrado {
+            background: rgba(17, 24, 39, 0.08);
+            color: #111827;
+        }
+
+        .order-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .order-actions button.secondary {
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+
+        .empty-state {
+            padding: 24px;
+            border-radius: 16px;
+            background: #f1f5f9;
+            text-align: center;
+            color: #475569;
+        }
+
+        .totals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .totals .pill {
+            background: white;
+            border: 1px solid #e5e7eb;
+            justify-content: center;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
             }
-            .central-node { 
-                width: 120px; 
-                height: 120px; 
-                font-size: 1em; 
+
+            .waiter-layout {
+                grid-template-columns: 1fr;
             }
-            .central-node .icon {
-                font-size: 2.5em;
-                margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
             }
-            .node { 
-                width: 140px; 
-                min-height: 120px; 
-                font-size: 0.85em;
-                padding: 12px 10px 8px 10px;
+
+            main {
+                padding: 16px;
             }
-            .node .icon {
-                font-size: 1.8em;
-                margin-bottom: 5px;
-            }
-            .expand-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 1.1em;
-            }
-            .nav-slider {
-                bottom: 80px;
-                padding: 8px 15px;
-            }
-            .nav-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 1.1em;
-                margin: 0 5px;
-            }
-            .zoom-info {
-                font-size: 0.95em;
-                margin: 0 10px;
-                min-width: 50px;
-            }
-            .reset-btn {
-                top: 10px;
-                right: 10px;
-                padding: 8px 12px;
-                font-size: 0.85em;
-            }
-            .watermark-text {
-                font-size: 2.5rem;
-                letter-spacing: 2px;
+
+            .card, .sidebar, .modules, .order-panel {
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
-<!-- Marca de agua -->
-<div class="watermark">
-    <div class="watermark-text">Hecho por Suyer Hernandez</div>
-</div>
+    <header>
+        <h1>POS Restaurante - Control Operativo</h1>
+        <div class="session-info" id="session-info">Sesión no iniciada</div>
+    </header>
+    <main>
+        <section id="login-section" class="card login-wrapper">
+            <h2>Bienvenido</h2>
+            <p>Inicia sesión como administrador o mesero para gestionar el restaurante.</p>
+            <div class="grid">
+                <div>
+                    <label for="role">Perfil</label>
+                    <select id="role">
+                        <option value="admin">Administrador</option>
+                        <option value="waiter">Mesero</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" placeholder="Ej. admin">
+                </div>
+                <div>
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+            </div>
+            <button id="login-btn" style="margin-top: 20px; width: 100%;">Iniciar sesión</button>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-top: 18px;">Credenciales de ejemplo — Administrador: admin/admin123 · Mesero: mesero/mesero123</p>
+        </section>
 
-<div class="mindmap-container">
-    <div class="mindmap-area">
-        <svg id="svg-lines"></svg>
-        <div class="central-node" id="centralNode">
-            <span class="icon">🧠</span>
-            Psicología<br>Social
-        </div>
-        <div class="node definicion" id="definicion">
-            <span class="icon">👤</span>
-            <b>Definición</b>
-            <div style="margin-top:8px;">Estudia cómo los pensamientos y conductas son influidos por otros.</div>
-            <button class="expand-btn" onclick="toggleExpand('def-expand', this)">+</button>
-            <div class="expandible" id="def-expand">
-                <b>Unidad de análisis:</b> el individuo en contextos sociales.<br>
-                <b>Tipos de influencia:</b> cara a cara, indirecta, unidireccional.<br>
-                <b>Ideas clave:</b> pensamiento social, influencia social, relaciones sociales.
+        <section id="admin-section" class="hidden">
+            <div class="layout">
+                <aside class="sidebar" id="admin-nav"></aside>
+                <div class="modules">
+                    <div id="module-content"></div>
+                </div>
             </div>
-        </div>
-        <div class="node definicion" id="objeto">
-            <span class="icon">🔍</span>
-            <b>Objeto y Especificidad</b>
-            <div style="margin-top:8px;">Interrelación individuo–sociedad. Procesos internos y fuerzas sociales.</div>
-            <button class="expand-btn" onclick="toggleExpand('obj-expand', this)">+</button>
-            <div class="expandible" id="obj-expand">
-                El objeto NO es lo mismo que los objetivos.<br>
-                <b>Enfoque:</b> percepción social, actitudes, conformidad, agresión, ayuda, prejuicio, atracción.
-            </div>
-        </div>
-        <div class="node objetivos" id="objetivos">
-            <span class="icon">🎯</span>
-            <b>Objetivos</b>
-            <div style="margin-top:8px;">
-                • Comprender influencia social<br>
-                • Explicar fenómenos sociales<br>
-                • Mejorar convivencia
-            </div>
-            <button class="expand-btn" onclick="toggleExpand('objs-expand', this)">+</button>
-            <div class="expandible" id="objs-expand">
-                <b>Científico:</b> identificar principios de influencia social.<br>
-                <b>Aplicado:</b> programas, campañas, intervenciones comunitarias y organizacionales.
-            </div>
-        </div>
-        <div class="node orientaciones" id="orientaciones">
-            <span class="icon">📚</span>
-            <b>Orientaciones Teóricas</b>
-            <div style="margin-top:8px;">
-                Conductismo, Gestalt, Cognitivismo, Rol, Interaccionismo, Construccionismo
-            </div>
-            <button class="expand-btn" onclick="toggleExpand('orient-expand', this)">+</button>
-            <div class="expandible" id="orient-expand">
-                <b>Conductismo:</b> refuerzo, modelado social.<br>
-                <b>Gestalt:</b> figura-fondo en percepción social.<br>
-                <b>Cognitivas:</b> heurísticos, procesamiento dual.<br>
-                <b>Construccionismo:</b> discursos y prácticas culturales.
-            </div>
-        </div>
-        <div class="node relacion" id="relacion">
-            <span class="icon">🔗</span>
-            <b>Relación con Otras Ciencias</b>
-            <div style="margin-top:8px;">
-                Sociología, Antropología, Biología; niveles explicativos complementarios.
-            </div>
-            <button class="expand-btn" onclick="toggleExpand('rel-expand', this)">+</button>
-            <div class="expandible" id="rel-expand">
-                <b>Diferencia con sociología:</b> estructuras vs. procesos individuales.<br>
-                <b>Complementariedad:</b> biológico, psicológico, social.
-            </div>
-        </div>
-        <div class="node rol" id="rol">
-            <span class="icon">💼</span>
-            <b>Rol del Psicólogo Social</b>
-            <div style="margin-top:8px;">
-                Diagnóstico, intervenciones, asesoría en conflictos y políticas.
-            </div>
-            <button class="expand-btn" onclick="toggleExpand('rol-expand', this)">+</button>
-            <div class="expandible" id="rol-expand">
-                <b>Funciones:</b> investigación, evaluación, campañas, asesoría, trabajo comunitario.<br>
-                <b>Contextos:</b> universidades, ONG, salud pública, empresas, gobiernos.
-            </div>
-        </div>
-        <div class="node metodos" id="metodos">
-            <span class="icon">🔬</span>
-            <b>Métodos</b>
-            <div style="margin-top:8px;">
-                Métodos cualitativos y experimentales para estudiar influencia.
-            </div>
-            <button class="expand-btn" onclick="toggleExpand('met-expand', this)">+</button>
-            <div class="expandible" id="met-expand">
-                <b>Ejemplos:</b> análisis del discurso, narrativas, etnografía, investigación de acción.<br>
-                <b>Nota:</b> la investigación cualitativa privilegia cercanía y flexibilidad.
-            </div>
-        </div>
-        <div class="node preguntas" id="preguntas">
-            <span class="icon">❓</span>
-            <b>Preguntas Generadoras</b>
-            <div style="margin-top:8px;">Cuestiones clave de la psicología social</div>
-            <button class="expand-btn" onclick="toggleExpand('preguntas-expand', this)">+</button>
-            <div class="expandible" id="preguntas-expand">
-                <b>a.</b> ¿Qué es la psicología social? ¿Cuál es su objeto de estudio? ¿Qué la caracteriza?<br><br>
-                <b>b.</b> ¿Cuáles son los objetivos de estudio esenciales de la psicología social?<br><br>
-                <b>c.</b> ¿Cuáles son las orientaciones y perspectivas teóricas principales de la psicología social (escuelas y teorías)?<br><br>
-                <b>d.</b> ¿Qué relaciones tiene la psicología social con otras ciencias humanas o sociales?<br><br>
-                <b>e.</b> ¿Qué hace un psicólogo social? ¿Cuál es su rol?
-            </div>
-        </div>
-    </div>
-</div>
+        </section>
 
-<!-- Botón de reset -->
-<button class="reset-btn" onclick="resetPositions()">Restablecer Posiciones</button>
+        <section id="waiter-section" class="hidden">
+            <div class="waiter-layout">
+                <div>
+                    <div class="flex-between" style="margin-bottom: 18px;">
+                        <h2>Mesas del salón</h2>
+                        <span class="pill">11 mesas activas</span>
+                    </div>
+                    <div class="tables-grid" id="tables-grid"></div>
+                </div>
+                <div class="order-panel">
+                    <div>
+                        <h2>Tomar pedido</h2>
+                        <form id="order-form" class="grid">
+                            <div class="grid two-columns">
+                                <div>
+                                    <label for="order-table">Mesa</label>
+                                    <select id="order-table"></select>
+                                </div>
+                                <div>
+                                    <label for="order-seat">Asiento</label>
+                                    <select id="order-seat"></select>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="order-customer">Nombre del cliente</label>
+                                <input type="text" id="order-customer" placeholder="Nombre o referencia del cliente" required>
+                            </div>
+                            <div>
+                                <label>Menú disponible</label>
+                                <div class="menu-options" id="menu-options"></div>
+                            </div>
+                            <div>
+                                <label for="order-notes">Adicionales y preferencias</label>
+                                <textarea id="order-notes" placeholder="Ej. sin cebolla, bebida sin hielo, agregar salsa extra"></textarea>
+                            </div>
+                            <div class="flex-between">
+                                <div class="pill">Total estimado: <span id="order-total">$0.00</span></div>
+                                <button type="submit">Generar pedido</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div>
+                        <div class="flex-between" style="margin-bottom: 12px;">
+                            <h2>Órdenes activas</h2>
+                            <span class="pill" id="order-count">0 pedidos</span>
+                        </div>
+                        <div id="order-list" class="order-list"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
-<!-- Slider de navegación -->
-<div class="nav-slider">
-    <button class="nav-btn" id="zoomOut" title="Alejar">−</button>
-    <div class="zoom-info">100%</div>
-    <button class="nav-btn" id="zoomIn" title="Acercar">+</button>
-    <button class="nav-btn" id="resetView" title="Restablecer vista">⟲</button>
-</div>
+    <template id="inventory-template">
+        <div>
+            <div class="flex-between">
+                <h2>Módulo de inventario</h2>
+                <span class="pill">Control de insumos y existencias</span>
+            </div>
+            <form id="inventory-form" class="grid two-columns" style="margin-top: 24px;">
+                <div>
+                    <label for="inventory-name">Nombre del producto</label>
+                    <input id="inventory-name" required placeholder="Ej. Pollo fresco">
+                </div>
+                <div>
+                    <label for="inventory-unit">Unidad de medida</label>
+                    <input id="inventory-unit" required placeholder="Kg, Litros, Paquetes...">
+                </div>
+                <div>
+                    <label for="inventory-quantity">Cantidad disponible</label>
+                    <input id="inventory-quantity" type="number" step="0.01" min="0" required>
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button type="submit">Agregar insumo</button>
+                </div>
+            </form>
+            <div id="inventory-list"></div>
+        </div>
+    </template>
 
-<script>
-    // Nodos y ángulos para distribución circular con radio aumentado
-    const nodes = [
-        {id: 'definicion', angle: -90, radius: 380, color: '#2563eb'},
-        {id: 'objeto', angle: -45, radius: 300, color: '#2563eb'},
-        {id: 'objetivos', angle: 0, radius: 380, color: '#16a34a'},
-        {id: 'orientaciones', angle: 45, radius: 300, color: '#a21caf'},
-        {id: 'relacion', angle: 90, radius: 380, color: '#ea580c'},
-        {id: 'rol', angle: 135, radius: 300, color: '#dc2626'},
-        {id: 'metodos', angle: 180, radius: 380, color: '#0891b2'},
-        {id: 'preguntas', angle: 225, radius: 300, color: '#64748b'}
-    ];
-    
-    let currentZoom = 1;
-    const minZoom = 0.5;
-    const maxZoom = 1.5;
-    
-    // Variables para el arrastre de nodos
-    let isDragging = false;
-    let currentDraggingNode = null;
-    let offsetX, offsetY;
-    
-    function positionNodes() {
-        const centerX = 800; // Centro del área del mapa (ajustado al nuevo ancho)
-        const centerY = 450; // Centro del área del mapa (ajustado al nuevo alto)
-        
-        nodes.forEach(n => {
-            const el = document.getElementById(n.id);
-            const rad = n.angle * Math.PI / 180;
-            const x = centerX + n.radius * Math.cos(rad) - el.offsetWidth/2;
-            const y = centerY + n.radius * Math.sin(rad) - el.offsetHeight/2;
-            el.style.left = x+'px';
-            el.style.top = y+'px';
-        });
-    }
-    
-    function drawLines() {
-        const svg = document.getElementById('svg-lines');
-        svg.innerHTML = '';
-        svg.setAttribute('width', '100%');
-        svg.setAttribute('height', '100%');
-        
-        // Obtener posición del nodo central
-        const centralNode = document.getElementById('centralNode');
-        const centralRect = centralNode.getBoundingClientRect();
-        const containerRect = document.querySelector('.mindmap-area').getBoundingClientRect();
-        
-        // Calcular centro del nodo central ajustado por el zoom
-        const centerX = (centralRect.left + centralRect.width/2 - containerRect.left) / currentZoom;
-        const centerY = (centralRect.top + centralRect.height/2 - containerRect.top) / currentZoom;
-        
-        nodes.forEach(n => {
-            const el = document.getElementById(n.id);
-            const rect = el.getBoundingClientRect();
-            
-            // Calcular centro del nodo actual ajustado por el zoom
-            const nodeX = (rect.left + rect.width/2 - containerRect.left) / currentZoom;
-            const nodeY = (rect.top + rect.height/2 - containerRect.top) / currentZoom;
-            
-            // Crear línea con degradado específico para cada nodo
-            const gradientId = `gradient-${n.id}`;
-            svg.innerHTML += `
-                <defs>
-                    <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#667eea" stop-opacity="0.8" />
-                        <stop offset="100%" stop-color="${n.color}" stop-opacity="0.6" />
-                    </linearGradient>
-                </defs>
-                <line x1="${centerX}" y1="${centerY}" x2="${nodeX}" y2="${nodeY}" 
-                      stroke="url(#${gradientId})" 
-                      stroke-width="5" 
-                      stroke-linecap="round" 
-                      opacity="0.9"
-                      stroke-dasharray="8,4">
-                    <animate attributeName="stroke-dashoffset" from="12" to="0" dur="1.5s" repeatCount="indefinite" />
-                </line>
-                
-                <!-- Añadir un punto brillante en el centro de la línea -->
-                <circle cx="${(centerX + nodeX) / 2}" cy="${(centerY + nodeY) / 2}" r="4" fill="${n.color}" opacity="0.8">
-                    <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2s" repeatCount="indefinite" />
-                </circle>
+    <template id="recipes-template">
+        <div>
+            <div class="flex-between">
+                <h2>Módulo de recetas</h2>
+                <span class="pill">Documentación de preparación</span>
+            </div>
+            <form id="recipe-form" class="grid" style="margin-top: 24px;">
+                <div class="grid two-columns">
+                    <div>
+                        <label for="recipe-name">Nombre de la receta</label>
+                        <input id="recipe-name" required placeholder="Ej. Lomo saltado">
+                    </div>
+                    <div>
+                        <label for="recipe-category">Categoría</label>
+                        <input id="recipe-category" placeholder="Almuerzo, especial, postre...">
+                    </div>
+                </div>
+                <div>
+                    <label for="recipe-ingredients">Ingredientes</label>
+                    <textarea id="recipe-ingredients" required placeholder="Detalle los ingredientes con cantidades"></textarea>
+                </div>
+                <div>
+                    <label for="recipe-instructions">Preparación paso a paso</label>
+                    <textarea id="recipe-instructions" required placeholder="Describe la técnica de preparación"></textarea>
+                </div>
+                <div style="text-align:right;">
+                    <button type="submit">Guardar receta</button>
+                </div>
+            </form>
+            <div id="recipe-list" style="margin-top: 24px;"></div>
+        </div>
+    </template>
+
+    <template id="daily-menu-template">
+        <div>
+            <div class="flex-between">
+                <h2>Menú del día</h2>
+                <span class="pill">Desayunos, almuerzos y especiales</span>
+            </div>
+            <form id="daily-menu-form" class="grid two-columns" style="margin-top: 24px;">
+                <div>
+                    <label for="daily-name">Nombre del plato</label>
+                    <input id="daily-name" required placeholder="Ej. Desayuno criollo">
+                </div>
+                <div>
+                    <label for="daily-category">Categoría</label>
+                    <select id="daily-category">
+                        <option value="Desayuno">Desayuno</option>
+                        <option value="Almuerzo">Almuerzo</option>
+                        <option value="Especial">Plato especial</option>
+                        <option value="Cena">Cena</option>
+                        <option value="Bebida">Bebida</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="daily-price">Precio</label>
+                    <input id="daily-price" type="number" step="0.01" min="0" required>
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button type="submit">Agregar al menú del día</button>
+                </div>
+            </form>
+            <div id="daily-menu-list" style="margin-top: 24px;"></div>
+        </div>
+    </template>
+
+    <template id="carta-template">
+        <div>
+            <div class="flex-between">
+                <h2>La carta del restaurante</h2>
+                <span class="pill">Menú permanente de platos</span>
+            </div>
+            <form id="carta-form" class="grid two-columns" style="margin-top: 24px;">
+                <div>
+                    <label for="carta-name">Nombre del plato</label>
+                    <input id="carta-name" required placeholder="Ej. Filete de res a la pimienta">
+                </div>
+                <div>
+                    <label for="carta-category">Categoría</label>
+                    <select id="carta-category">
+                        <option value="Entrada">Entrada</option>
+                        <option value="Plato fuerte">Plato fuerte</option>
+                        <option value="Postre">Postre</option>
+                        <option value="Bebida">Bebida</option>
+                        <option value="Infantil">Menú infantil</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="carta-price">Precio</label>
+                    <input id="carta-price" type="number" step="0.01" min="0" required>
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button type="submit">Agregar a la carta</button>
+                </div>
+            </form>
+            <div id="carta-list" style="margin-top: 24px;"></div>
+        </div>
+    </template>
+
+    <template id="pricing-template">
+        <div>
+            <div class="flex-between">
+                <h2>Asignación de precios</h2>
+                <span class="pill">Actualiza los valores de venta</span>
+            </div>
+            <p>Gestiona los precios de los platos del menú del día y de la carta. Los cambios se reflejan inmediatamente en la toma de pedidos.</p>
+            <div class="grid" style="margin-top: 24px; gap: 24px;">
+                <div>
+                    <h3>Menú del día</h3>
+                    <div id="pricing-daily"></div>
+                </div>
+                <div>
+                    <h3>La carta</h3>
+                    <div id="pricing-carta"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="sales-template">
+        <div>
+            <div class="flex-between">
+                <h2>Registro de ventas</h2>
+                <span class="pill">Control de efectivo y transferencias</span>
+            </div>
+            <div id="sales-table" style="margin-top: 24px;"></div>
+            <div class="totals">
+                <div class="pill">Efectivo: <span id="cash-total">$0.00</span></div>
+                <div class="pill">Transferencias: <span id="transfer-total">$0.00</span></div>
+                <div class="pill">Total general: <span id="grand-total">$0.00</span></div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        const STORAGE_KEY = 'posRestauranteDataV1';
+
+        const defaultState = {
+            users: {
+                admin: { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrador General' },
+                mesero: { username: 'mesero', password: 'mesero123', role: 'waiter', name: 'Equipo de Meseros' }
+            },
+            inventory: [],
+            recipes: [],
+            dailyMenu: [],
+            carta: [],
+            orders: [],
+            sales: []
+        };
+
+        const tableConfig = [
+            { number: 1, seats: 4 },
+            { number: 2, seats: 4 },
+            { number: 3, seats: 4 },
+            { number: 4, seats: 4 },
+            { number: 5, seats: 4 },
+            { number: 6, seats: 4 },
+            { number: 7, seats: 4 },
+            { number: 8, seats: 4 },
+            { number: 9, seats: 4 },
+            { number: 10, seats: 4 },
+            { number: 11, seats: 4 }
+        ];
+
+        let state = loadState();
+        let currentUser = null;
+        let currentModule = 'inventory';
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    return { ...defaultState, ...parsed };
+                }
+            } catch (error) {
+                console.error('Error loading state', error);
+            }
+            return structuredClone(defaultState);
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        const sessionInfo = document.getElementById('session-info');
+        const loginSection = document.getElementById('login-section');
+        const adminSection = document.getElementById('admin-section');
+        const waiterSection = document.getElementById('waiter-section');
+        const adminNav = document.getElementById('admin-nav');
+        const moduleContent = document.getElementById('module-content');
+
+        document.getElementById('login-btn').addEventListener('click', handleLogin);
+
+        function handleLogin() {
+            const role = document.getElementById('role').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            const user = Object.values(state.users).find(u => u.role === role && u.username === username && u.password === password);
+
+            if (!user) {
+                alert('Credenciales inválidas. Verifica el usuario y la contraseña.');
+                return;
+            }
+
+            currentUser = user;
+            sessionInfo.textContent = `Sesión activa: ${user.name} (${user.role === 'admin' ? 'Administrador' : 'Mesero'})`;
+            loginSection.classList.add('hidden');
+
+            if (user.role === 'admin') {
+                renderAdmin();
+            } else {
+                renderWaiter();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            sessionInfo.textContent = 'Sesión no iniciada';
+            adminSection.classList.add('hidden');
+            waiterSection.classList.add('hidden');
+            loginSection.classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function renderAdmin() {
+            adminSection.classList.remove('hidden');
+            waiterSection.classList.add('hidden');
+
+            adminNav.innerHTML = '';
+            const modules = [
+                { id: 'inventory', label: 'Inventario' },
+                { id: 'recipes', label: 'Recetas' },
+                { id: 'dailyMenu', label: 'Menú del día' },
+                { id: 'carta', label: 'Carta' },
+                { id: 'pricing', label: 'Asignar precios' },
+                { id: 'sales', label: 'Registro de ventas' },
+                { id: 'logout', label: 'Cerrar sesión' }
+            ];
+
+            modules.forEach(mod => {
+                const btn = document.createElement('button');
+                btn.textContent = mod.label;
+                if (mod.id === currentModule) {
+                    btn.classList.add('active');
+                }
+                btn.addEventListener('click', () => {
+                    if (mod.id === 'logout') {
+                        logout();
+                        return;
+                    }
+                    currentModule = mod.id;
+                    renderAdmin();
+                });
+                adminNav.appendChild(btn);
+            });
+
+            renderModuleContent(currentModule);
+        }
+
+        function renderModuleContent(moduleId) {
+            const templateId = {
+                inventory: 'inventory-template',
+                recipes: 'recipes-template',
+                dailyMenu: 'daily-menu-template',
+                carta: 'carta-template',
+                pricing: 'pricing-template',
+                sales: 'sales-template'
+            }[moduleId];
+
+            const template = document.getElementById(templateId);
+            if (!template) return;
+
+            moduleContent.innerHTML = '';
+            moduleContent.appendChild(template.content.cloneNode(true));
+
+            switch (moduleId) {
+                case 'inventory':
+                    setupInventoryModule();
+                    break;
+                case 'recipes':
+                    setupRecipesModule();
+                    break;
+                case 'dailyMenu':
+                    setupDailyMenuModule();
+                    break;
+                case 'carta':
+                    setupCartaModule();
+                    break;
+                case 'pricing':
+                    setupPricingModule();
+                    break;
+                case 'sales':
+                    setupSalesModule();
+                    break;
+            }
+
+            Array.from(adminNav.children).forEach(btn => btn.classList.remove('active'));
+            const activeBtn = Array.from(adminNav.children).find(btn => btn.textContent === modulesLabel(moduleId));
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function modulesLabel(id) {
+            switch (id) {
+                case 'inventory': return 'Inventario';
+                case 'recipes': return 'Recetas';
+                case 'dailyMenu': return 'Menú del día';
+                case 'carta': return 'Carta';
+                case 'pricing': return 'Asignar precios';
+                case 'sales': return 'Registro de ventas';
+                default: return '';
+            }
+        }
+
+        function setupInventoryModule() {
+            const form = document.getElementById('inventory-form');
+            const listContainer = document.getElementById('inventory-list');
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const name = document.getElementById('inventory-name').value.trim();
+                const unit = document.getElementById('inventory-unit').value.trim();
+                const quantity = parseFloat(document.getElementById('inventory-quantity').value);
+
+                if (!name || !unit || isNaN(quantity)) return;
+
+                state.inventory.push({
+                    id: crypto.randomUUID(),
+                    name,
+                    unit,
+                    quantity
+                });
+                saveState();
+                form.reset();
+                renderInventoryList();
+            });
+
+            function renderInventoryList() {
+                if (!state.inventory.length) {
+                    listContainer.innerHTML = '<div class="empty-state">Aún no hay insumos registrados. Agrega los productos disponibles.</div>';
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Unidad</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${state.inventory.map(item => `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.unit}</td>
+                                <td>${item.quantity}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                listContainer.innerHTML = '';
+                listContainer.appendChild(table);
+            }
+
+            renderInventoryList();
+        }
+
+        function setupRecipesModule() {
+            const form = document.getElementById('recipe-form');
+            const listContainer = document.getElementById('recipe-list');
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const name = document.getElementById('recipe-name').value.trim();
+                const category = document.getElementById('recipe-category').value.trim();
+                const ingredients = document.getElementById('recipe-ingredients').value.trim();
+                const instructions = document.getElementById('recipe-instructions').value.trim();
+
+                if (!name || !ingredients || !instructions) return;
+
+                state.recipes.push({
+                    id: crypto.randomUUID(),
+                    name,
+                    category,
+                    ingredients,
+                    instructions
+                });
+                saveState();
+                form.reset();
+                renderRecipeList();
+            });
+
+            function renderRecipeList() {
+                if (!state.recipes.length) {
+                    listContainer.innerHTML = '<div class="empty-state">No hay recetas registradas. Documenta tus platos clave para los equipos de cocina.</div>';
+                    return;
+                }
+
+                listContainer.innerHTML = state.recipes.map(recipe => `
+                    <div class="card" style="padding: 18px; margin-bottom: 18px;">
+                        <div class="flex-between">
+                            <h3 style="margin:0;">${recipe.name}</h3>
+                            ${recipe.category ? `<span class="tag">${recipe.category}</span>` : ''}
+                        </div>
+                        <p><strong>Ingredientes:</strong> ${recipe.ingredients}</p>
+                        <p><strong>Preparación:</strong> ${recipe.instructions}</p>
+                    </div>
+                `).join('');
+            }
+
+            renderRecipeList();
+        }
+
+        function setupDailyMenuModule() {
+            const form = document.getElementById('daily-menu-form');
+            const listContainer = document.getElementById('daily-menu-list');
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const name = document.getElementById('daily-name').value.trim();
+                const category = document.getElementById('daily-category').value;
+                const price = parseFloat(document.getElementById('daily-price').value);
+
+                if (!name || isNaN(price)) return;
+
+                state.dailyMenu.push({
+                    id: crypto.randomUUID(),
+                    name,
+                    category,
+                    price
+                });
+                saveState();
+                form.reset();
+                renderDailyMenuList();
+                refreshMenuOptions();
+            });
+
+            function renderDailyMenuList() {
+                if (!state.dailyMenu.length) {
+                    listContainer.innerHTML = '<div class="empty-state">No hay platos del día registrados. Agrega desayunos, almuerzos y especiales para el turno.</div>';
+                    return;
+                }
+
+                const grouped = groupBy(state.dailyMenu, 'category');
+                listContainer.innerHTML = Object.entries(grouped).map(([category, items]) => `
+                    <div class="card" style="padding: 18px; margin-bottom: 18px;">
+                        <h3 style="margin-top:0;">${category}</h3>
+                        <table>
+                            <tbody>
+                                ${items.map(item => `
+                                    <tr>
+                                        <td>${item.name}</td>
+                                        <td style="text-align:right; font-weight:600;">$${item.price.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `).join('');
+            }
+
+            renderDailyMenuList();
+        }
+
+        function setupCartaModule() {
+            const form = document.getElementById('carta-form');
+            const listContainer = document.getElementById('carta-list');
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const name = document.getElementById('carta-name').value.trim();
+                const category = document.getElementById('carta-category').value;
+                const price = parseFloat(document.getElementById('carta-price').value);
+
+                if (!name || isNaN(price)) return;
+
+                state.carta.push({
+                    id: crypto.randomUUID(),
+                    name,
+                    category,
+                    price
+                });
+                saveState();
+                form.reset();
+                renderCartaList();
+                refreshMenuOptions();
+            });
+
+            function renderCartaList() {
+                if (!state.carta.length) {
+                    listContainer.innerHTML = '<div class="empty-state">Aún no hay platos en la carta. Registra las opciones permanentes del restaurante.</div>';
+                    return;
+                }
+
+                const grouped = groupBy(state.carta, 'category');
+                listContainer.innerHTML = Object.entries(grouped).map(([category, items]) => `
+                    <div class="card" style="padding: 18px; margin-bottom: 18px;">
+                        <h3 style="margin-top:0;">${category}</h3>
+                        <table>
+                            <tbody>
+                                ${items.map(item => `
+                                    <tr>
+                                        <td>${item.name}</td>
+                                        <td style="text-align:right; font-weight:600;">$${item.price.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `).join('');
+            }
+
+            renderCartaList();
+        }
+
+        function setupPricingModule() {
+            const dailyContainer = document.getElementById('pricing-daily');
+            const cartaContainer = document.getElementById('pricing-carta');
+
+            function renderPricing(container, items, type) {
+                if (!items.length) {
+                    container.innerHTML = '<div class="empty-state">Sin registros disponibles.</div>';
+                    return;
+                }
+
+                container.innerHTML = items.map(item => `
+                    <div class="card" style="padding: 16px; margin-bottom: 12px;">
+                        <div class="flex-between">
+                            <div>
+                                <h4 style="margin:0;">${item.name}</h4>
+                                <small style="color:#6b7280;">${item.category}</small>
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <span>$</span>
+                                <input type="number" min="0" step="0.01" value="${item.price}" data-type="${type}" data-id="${item.id}" style="width:120px;">
+                                <button data-action="update-price" data-type="${type}" data-id="${item.id}">Actualizar</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.querySelectorAll('button[data-action="update-price"]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const typeAttr = btn.dataset.type;
+                        const input = container.querySelector(`input[data-id="${id}"][data-type="${typeAttr}"]`);
+                        const newPrice = parseFloat(input.value);
+                        if (isNaN(newPrice)) return;
+                        const list = typeAttr === 'daily' ? state.dailyMenu : state.carta;
+                        const element = list.find(item => item.id === id);
+                        if (element) {
+                            element.price = newPrice;
+                            saveState();
+                            alert('Precio actualizado correctamente');
+                            refreshMenuOptions();
+                            renderPricing(container, list, typeAttr);
+                        }
+                    });
+                });
+            }
+
+            renderPricing(dailyContainer, state.dailyMenu, 'daily');
+            renderPricing(cartaContainer, state.carta, 'carta');
+        }
+
+        function setupSalesModule() {
+            const tableContainer = document.getElementById('sales-table');
+            const cashTotal = document.getElementById('cash-total');
+            const transferTotal = document.getElementById('transfer-total');
+            const grandTotal = document.getElementById('grand-total');
+
+            if (!state.sales.length) {
+                tableContainer.innerHTML = '<div class="empty-state">No hay ventas registradas todavía.</div>';
+                cashTotal.textContent = formatCurrency(0);
+                transferTotal.textContent = formatCurrency(0);
+                grandTotal.textContent = formatCurrency(0);
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Mesa</th>
+                        <th>Total</th>
+                        <th>Pago</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${state.sales.map(sale => `
+                        <tr>
+                            <td>${formatDate(sale.timestamp)}</td>
+                            <td>${sale.orderCode}</td>
+                            <td>${sale.customer}</td>
+                            <td>${sale.table}</td>
+                            <td>${formatCurrency(sale.total)}</td>
+                            <td>${sale.paymentType}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
             `;
+            tableContainer.innerHTML = '';
+            tableContainer.appendChild(table);
+
+            const cash = state.sales.filter(s => s.paymentType === 'Efectivo').reduce((sum, sale) => sum + sale.total, 0);
+            const transfer = state.sales.filter(s => s.paymentType === 'Transferencia').reduce((sum, sale) => sum + sale.total, 0);
+            const total = cash + transfer;
+
+            cashTotal.textContent = formatCurrency(cash);
+            transferTotal.textContent = formatCurrency(transfer);
+            grandTotal.textContent = formatCurrency(total);
+        }
+
+        function renderWaiter() {
+            adminSection.classList.add('hidden');
+            waiterSection.classList.remove('hidden');
+
+            populateTableOptions();
+            populateSeatOptions();
+            refreshMenuOptions();
+            renderTables();
+            renderOrders();
+
+            const form = document.getElementById('order-form');
+            form.addEventListener('submit', handleNewOrder);
+
+            document.getElementById('order-table').addEventListener('change', populateSeatOptions);
+        }
+
+        function populateTableOptions() {
+            const tableSelect = document.getElementById('order-table');
+            tableSelect.innerHTML = tableConfig.map(table => `<option value="${table.number}">Mesa ${table.number}</option>`).join('');
+        }
+
+        function populateSeatOptions() {
+            const tableNumber = parseInt(document.getElementById('order-table').value, 10);
+            const seatSelect = document.getElementById('order-seat');
+            const table = tableConfig.find(t => t.number === tableNumber);
+            if (!table) return;
+            const options = [];
+            for (let seat = 1; seat <= table.seats; seat++) {
+                const occupied = isSeatOccupied(tableNumber, seat);
+                options.push(`<option value="${seat}" ${occupied ? 'disabled' : ''}>Asiento ${seat} ${occupied ? '(ocupado)' : ''}</option>`);
+            }
+            seatSelect.innerHTML = options.join('');
+        }
+
+        function isSeatOccupied(tableNumber, seat) {
+            return state.orders.some(order => order.table === tableNumber && order.seat === seat && order.status !== 'cerrado');
+        }
+
+        function refreshMenuOptions() {
+            const container = document.getElementById('menu-options');
+            if (!container) return;
+
+            const dailyGrouped = groupBy(state.dailyMenu, 'category');
+            const cartaGrouped = groupBy(state.carta, 'category');
+
+            if (!state.dailyMenu.length && !state.carta.length) {
+                container.innerHTML = '<div class="empty-state">El administrador aún no ha cargado platos. Contacta al administrador.</div>';
+                return;
+            }
+
+            let html = '';
+            if (state.dailyMenu.length) {
+                html += '<h4>Menú del día</h4>';
+                Object.entries(dailyGrouped).forEach(([category, items]) => {
+                    html += `<strong>${category}</strong>`;
+                    items.forEach(item => {
+                        html += `
+                            <div class="menu-item-option">
+                                <label>
+                                    <input type="checkbox" class="menu-choice" data-type="daily" data-id="${item.id}" data-price="${item.price}" value="${item.name}">
+                                    ${item.name}
+                                </label>
+                                <span>${formatCurrency(item.price)}</span>
+                            </div>`;
+                    });
+                });
+            }
+
+            if (state.carta.length) {
+                html += '<h4>Platos de la carta</h4>';
+                Object.entries(cartaGrouped).forEach(([category, items]) => {
+                    html += `<strong>${category}</strong>`;
+                    items.forEach(item => {
+                        html += `
+                            <div class="menu-item-option">
+                                <label>
+                                    <input type="checkbox" class="menu-choice" data-type="carta" data-id="${item.id}" data-price="${item.price}" value="${item.name}">
+                                    ${item.name}
+                                </label>
+                                <span>${formatCurrency(item.price)}</span>
+                            </div>`;
+                    });
+                });
+            }
+
+            container.innerHTML = html;
+            container.querySelectorAll('.menu-choice').forEach(choice => {
+                choice.addEventListener('change', updateOrderTotalPreview);
+            });
+            updateOrderTotalPreview();
+        }
+
+        function updateOrderTotalPreview() {
+            const total = Array.from(document.querySelectorAll('.menu-choice:checked')).reduce((sum, input) => {
+                return sum + parseFloat(input.dataset.price);
+            }, 0);
+            const totalEl = document.getElementById('order-total');
+            if (totalEl) totalEl.textContent = formatCurrency(total);
+        }
+
+        function handleNewOrder(event) {
+            event.preventDefault();
+            const tableNumber = parseInt(document.getElementById('order-table').value, 10);
+            const seat = parseInt(document.getElementById('order-seat').value, 10);
+            const customer = document.getElementById('order-customer').value.trim();
+            const notes = document.getElementById('order-notes').value.trim();
+            const selections = Array.from(document.querySelectorAll('.menu-choice:checked'));
+
+            if (!customer) {
+                alert('Agrega el nombre o referencia del cliente.');
+                return;
+            }
+
+            if (!selections.length) {
+                alert('Selecciona al menos un plato.');
+                return;
+            }
+
+            if (isSeatOccupied(tableNumber, seat)) {
+                alert('Ese asiento ya tiene un pedido activo. Debe finalizarlo antes de crear uno nuevo.');
+                return;
+            }
+
+            const items = selections.map(input => {
+                const type = input.dataset.type;
+                const id = input.dataset.id;
+                const list = type === 'daily' ? state.dailyMenu : state.carta;
+                const record = list.find(item => item.id === id);
+                return {
+                    id,
+                    name: record ? record.name : input.value,
+                    price: record ? record.price : parseFloat(input.dataset.price),
+                    source: type
+                };
+            });
+
+            const total = items.reduce((sum, item) => sum + item.price, 0);
+
+            const order = {
+                id: crypto.randomUUID(),
+                code: generateOrderCode(),
+                table: tableNumber,
+                seat,
+                customer,
+                items,
+                notes,
+                status: 'pendiente',
+                total,
+                createdAt: Date.now()
+            };
+
+            state.orders.push(order);
+            saveState();
+            event.target.reset();
+            populateSeatOptions();
+            refreshMenuOptions();
+            renderTables();
+            renderOrders();
+            alert(`Pedido ${order.code} creado correctamente.`);
+        }
+
+        function generateOrderCode() {
+            const date = new Date();
+            return `PED-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${date.getHours()}${date.getMinutes()}${date.getSeconds()}`;
+        }
+
+        function renderTables() {
+            const container = document.getElementById('tables-grid');
+            container.innerHTML = '';
+
+            tableConfig.forEach(table => {
+                const card = document.createElement('div');
+                card.className = 'table-card';
+                const seatsInfo = [];
+                let busySeats = 0;
+
+                for (let seat = 1; seat <= table.seats; seat++) {
+                    const order = state.orders.find(o => o.table === table.number && o.seat === seat && o.status !== 'cerrado');
+                    if (order) busySeats++;
+                    seatsInfo.push({ seat, order });
+                }
+
+                if (busySeats > 0) {
+                    card.classList.add('busy');
+                }
+
+                card.innerHTML = `
+                    <h3>Mesa ${table.number}</h3>
+                    <div class="seat-grid">
+                        ${seatsInfo.map(info => `
+                            <div class="seat ${info.order ? 'busy' : ''}">
+                                <strong>Asiento ${info.seat}</strong>
+                                ${info.order ? `<span>${info.order.customer}</span><small>${info.order.code}</small>` : '<small>Disponible</small>'}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('order-list');
+            const count = document.getElementById('order-count');
+            const activeOrders = state.orders.filter(order => order.status !== 'cerrado');
+
+            count.textContent = `${activeOrders.length} ${activeOrders.length === 1 ? 'pedido' : 'pedidos'}`;
+
+            if (!activeOrders.length) {
+                list.innerHTML = '<div class="empty-state">Aún no hay órdenes activas. Selecciona una mesa y registra un pedido.</div>';
+                return;
+            }
+
+            list.innerHTML = activeOrders.map(order => `
+                <div class="order-card">
+                    <div class="flex-between" style="margin-bottom: 6px;">
+                        <h3 style="margin:0;">${order.code}</h3>
+                        <span class="status ${order.status}">${order.status}</span>
+                    </div>
+                    <p style="margin:4px 0;">Mesa ${order.table} · Asiento ${order.seat}</p>
+                    <p style="margin:4px 0;"><strong>Cliente:</strong> ${order.customer}</p>
+                    <ul style="margin: 8px 0 0 16px; padding:0;">
+                        ${order.items.map(item => `<li>${item.name} — ${formatCurrency(item.price)}</li>`).join('')}
+                    </ul>
+                    ${order.notes ? `<p style="margin:8px 0 0 0;"><strong>Notas:</strong> ${order.notes}</p>` : ''}
+                    <p style="margin:12px 0 0 0; font-weight:600;">Total: ${formatCurrency(order.total)}</p>
+                    <div class="order-actions" style="margin-top:12px;">
+                        <button class="secondary" data-action="print" data-id="${order.id}">Imprimir tiquete</button>
+                        ${order.status === 'pendiente' ? `<button data-action="serve" data-id="${order.id}">Marcar como servido</button>` : ''}
+                        ${order.status === 'servido' ? `<button data-action="pay" data-id="${order.id}">Registrar pago</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            list.querySelectorAll('button[data-action]').forEach(btn => {
+                const action = btn.dataset.action;
+                const id = btn.dataset.id;
+                btn.addEventListener('click', () => {
+                    if (action === 'serve') {
+                        updateOrderStatus(id, 'servido');
+                    } else if (action === 'pay') {
+                        registerPayment(id);
+                    } else if (action === 'print') {
+                        printTicket(id);
+                    }
+                });
+            });
+        }
+
+        function updateOrderStatus(id, status) {
+            const order = state.orders.find(o => o.id === id);
+            if (!order) return;
+            order.status = status;
+            saveState();
+            renderOrders();
+            renderTables();
+        }
+
+        function registerPayment(orderId) {
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const paymentType = prompt('Indica el tipo de pago (efectivo/transferencia):');
+            if (!paymentType) return;
+            const normalized = paymentType.trim().toLowerCase();
+
+            if (normalized !== 'efectivo' && normalized !== 'transferencia') {
+                alert('Tipo de pago no reconocido. Usa \"efectivo\" o \"transferencia\".');
+                return;
+            }
+
+            const sale = {
+                id: crypto.randomUUID(),
+                orderId: order.id,
+                orderCode: order.code,
+                customer: order.customer,
+                table: `Mesa ${order.table} / Asiento ${order.seat}`,
+                total: order.total,
+                paymentType: normalized === 'efectivo' ? 'Efectivo' : 'Transferencia',
+                timestamp: Date.now()
+            };
+
+            state.sales.push(sale);
+            order.status = 'cerrado';
+            saveState();
+            renderOrders();
+            renderTables();
+            if (currentUser && currentUser.role === 'admin') {
+                setupSalesModule();
+            }
+            alert(`Pago registrado en ${sale.paymentType}. El asiento queda disponible.`);
+        }
+
+        function printTicket(orderId) {
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const ticketWindow = window.open('', '_blank');
+            if (!ticketWindow) {
+                alert('Habilita las ventanas emergentes para imprimir el tiquete.');
+                return;
+            }
+
+            ticketWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Tiquete ${order.code}</title>
+                        <style>
+                            body { font-family: 'Segoe UI', sans-serif; padding: 24px; }
+                            h1 { font-size: 1.4rem; margin-bottom: 8px; }
+                            ul { margin: 12px 0; padding-left: 18px; }
+                            li { margin-bottom: 4px; }
+                            .total { font-weight: 700; margin-top: 12px; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Restaurante - Tiquete de pedido</h1>
+                        <p><strong>Código:</strong> ${order.code}</p>
+                        <p><strong>Cliente:</strong> ${order.customer}</p>
+                        <p><strong>Mesa:</strong> ${order.table} | Asiento ${order.seat}</p>
+                        <p><strong>Fecha:</strong> ${formatDate(order.createdAt)}</p>
+                        <ul>
+                            ${order.items.map(item => `<li>${item.name} — ${formatCurrency(item.price)}</li>`).join('')}
+                        </ul>
+                        ${order.notes ? `<p><strong>Notas:</strong> ${order.notes}</p>` : ''}
+                        <p class='total'>Total: ${formatCurrency(order.total)}</p>
+                        <script>window.print(); setTimeout(() => window.close(), 300);<\/script>
+                    </body>
+                </html>
+            `);
+            ticketWindow.document.close();
+        }
+
+        function groupBy(array, key) {
+            return array.reduce((result, item) => {
+                (result[item[key]] = result[item[key]] || []).push(item);
+                return result;
+            }, {});
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(value);
+        }
+
+        function formatDate(timestamp) {
+            return new Intl.DateTimeFormat('es-CO', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            }).format(new Date(timestamp));
+        }
+
+        window.addEventListener('storage', () => {
+            state = loadState();
+            if (currentUser) {
+                if (currentUser.role === 'admin') {
+                    renderModuleContent(currentModule);
+                } else {
+                    refreshMenuOptions();
+                    renderTables();
+                    renderOrders();
+                }
+            }
         });
-    }
-    
-    function updateZoom() {
-        const mindmapArea = document.querySelector('.mindmap-area');
-        mindmapArea.style.transform = `scale(${currentZoom})`;
-        mindmapArea.style.transformOrigin = 'center center';
-        
-        // Actualizar el indicador de zoom
-        document.querySelector('.zoom-info').textContent = Math.round(currentZoom * 100) + '%';
-        
-        // Redibujar líneas después del zoom
-        setTimeout(() => {
-            drawLines();
-        }, 100);
-    }
-    
-    function toggleExpand(id, btn) {
-        const el = document.getElementById(id);
-        el.classList.toggle('active');
-        btn.textContent = el.classList.contains('active') ? '−' : '+';
-    }
-    
-    document.getElementById('centralNode').onclick = function() {
-        if(document.getElementById('centralInfo')) return;
-        const info = document.createElement('div');
-        info.id = 'centralInfo';
-        info.style.position = 'fixed';
-        info.style.left = '50%';
-        info.style.top = '50%';
-        info.style.transform = 'translate(-50%,-50%)';
-        info.style.background = 'linear-gradient(145deg, #ffffff, #f0f4f8)';
-        info.style.color = '#334155';
-        info.style.padding = '40px';
-        info.style.borderRadius = '20px';
-        info.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.08)';
-        info.style.zIndex = 1000;
-        info.style.maxWidth = '80%';
-        info.style.border = '1px solid rgba(255, 255, 255, 0.8)';
-        info.style.backdropFilter = 'blur(10px)';
-        info.innerHTML = `
-            <h2 style="margin-top:0;color:#667eea;margin-bottom:20px;">Psicología Social</h2>
-            <p style="line-height:1.6;">La Psicología Social estudia cómo nuestros pensamientos, sentimientos y comportamientos son moldeados por el contexto social. Desde los experimentos clásicos de Milgram hasta las modernas teorías sobre redes sociales, esta disciplina nos ayuda a entender la compleja danza entre el individuo y la sociedad.</p>
-            <button onclick="this.parentElement.remove()" style="margin-top:25px;padding:12px 24px;background:linear-gradient(145deg, #667eea, #764ba2);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:500;box-shadow:0 4px 8px rgba(102, 126, 234, 0.3);">Cerrar</button>
-        `;
-        document.body.appendChild(info);
-    }
-    
-    // Funcionalidad del slider de zoom
-    document.getElementById('zoomIn').addEventListener('click', () => {
-        if (currentZoom < maxZoom) {
-            currentZoom += 0.1;
-            updateZoom();
-        }
-    });
-    
-    document.getElementById('zoomOut').addEventListener('click', () => {
-        if (currentZoom > minZoom) {
-            currentZoom -= 0.1;
-            updateZoom();
-        }
-    });
-    
-    document.getElementById('resetView').addEventListener('click', () => {
-        currentZoom = 1;
-        updateZoom();
-        // Centrar la vista
-        document.querySelector('.mindmap-container').scrollLeft = 0;
-        document.querySelector('.mindmap-container').scrollTop = 0;
-    });
-    
-    // Funcionalidad de arrastre de nodos
-    document.querySelectorAll('.node').forEach(node => {
-        node.addEventListener('mousedown', startDragging);
-    });
-    
-    function startDragging(e) {
-        // Evitar que se inicie el arrastre si se hace clic en el botón de expandir
-        if (e.target.classList.contains('expand-btn')) {
-            return;
-        }
-        
-        isDragging = true;
-        currentDraggingNode = e.currentTarget;
-        
-        // Añadir clase visual durante el arrastre
-        currentDraggingNode.classList.add('dragging');
-        
-        // Calcular el offset desde la esquina superior izquierda del nodo
-        const rect = currentDraggingNode.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        
-        // Añadir eventos de movimiento y liberación
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stopDragging);
-        
-        // Evitar la selección de texto durante el arrastre
-        e.preventDefault();
-    }
-    
-    function drag(e) {
-        if (!isDragging || !currentDraggingNode) return;
-        
-        // Obtener la posición del contenedor
-        const containerRect = document.querySelector('.mindmap-area').getBoundingClientRect();
-        
-        // Calcular la nueva posición del nodo ajustada por el zoom
-        let newX = (e.clientX - containerRect.left - offsetX) / currentZoom;
-        let newY = (e.clientY - containerRect.top - offsetY) / currentZoom;
-        
-        // Aplicar la nueva posición
-        currentDraggingNode.style.left = newX + 'px';
-        currentDraggingNode.style.top = newY + 'px';
-        
-        // Redibujar las líneas para que sigan al nodo
-        drawLines();
-    }
-    
-    function stopDragging() {
-        if (currentDraggingNode) {
-            currentDraggingNode.classList.remove('dragging');
-        }
-        
-        isDragging = false;
-        currentDraggingNode = null;
-        
-        // Eliminar eventos de movimiento y liberación
-        document.removeEventListener('mousemove', drag);
-        document.removeEventListener('mouseup', stopDragging);
-    }
-    
-    // Función para restablecer las posiciones originales
-    function resetPositions() {
-        positionNodes();
-        drawLines();
-    }
-    
-    // Inicialización
-    window.addEventListener('DOMContentLoaded', () => { 
-        positionNodes(); 
-        drawLines(); 
-    });
-    
-    // Ajustar cuando cambie el tamaño de la ventana
-    window.addEventListener('resize', () => { 
-        positionNodes(); 
-        drawLines(); 
-    });
-</script>
+    </script>
 </body>
 </html>
